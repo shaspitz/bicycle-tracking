@@ -1,15 +1,16 @@
 import numpy as np
 import scipy as sp
-#NO OTHER IMPORTS ALLOWED (However, you're allowed to import e.g. scipy.linalg)
+# NO OTHER IMPORTS ALLOWED (However, you're allowed to import e.g. scipy.linalg)
+
 
 def estRun(time, dt, internalStateIn, steeringAngle, pedalSpeed, measurement):
     # In this function you implement your estimator. The function arguments
     # are:
-    #  time: current time in [s] 
+    #  time: current time in [s]
     #  dt: current time step [s]
-    #  internalStateIn: the estimator internal state, definition up to you. 
-    #  steeringAngle: the steering angle of the bike, gamma, [rad] 
-    #  pedalSpeed: the rotational speed of the pedal, omega, [rad/s] 
+    #  internalStateIn: the estimator internal state, definition up to you.
+    #  steeringAngle: the steering angle of the bike, gamma, [rad]
+    #  pedalSpeed: the rotational speed of the pedal, omega, [rad/s]
     #  measurement: the position measurement valid at the current time step
     #
     # Note: the measurement is a 2D vector, of x-y position measurement.
@@ -23,6 +24,9 @@ def estRun(time, dt, internalStateIn, steeringAngle, pedalSpeed, measurement):
     #  internalState: the estimator's internal state, in a format that can be understood by the next call to this function
 
     # Example code only, you'll want to heavily modify this.
+
+    # 4/2/2020: PF since dynamics are highly nonlinear (asymptotic parts tangent)
+
     # this internal state needs to correspond to your init function:
     x = internalStateIn[0]
     y = internalStateIn[1]
@@ -37,9 +41,8 @@ def estRun(time, dt, internalStateIn, steeringAngle, pedalSpeed, measurement):
         x = measurement[0]
         y = measurement[1]
         theta = theta + 1
-        
 
-    #we're unreliable about our favourite colour: 
+    # We're unreliable about our favourite colour: 
     if myColor == 'green':
         myColor = 'red'
     else:
@@ -51,12 +54,12 @@ def estRun(time, dt, internalStateIn, steeringAngle, pedalSpeed, measurement):
     # at next run), must obviously be compatible with the format of
     # internalStateIn:
     internalStateOut = [x,
-                     y,
-                     theta, 
-                     myColor
-                     ]
+                        y,
+                        theta,
+                        myColor
+                        ]
 
     # DO NOT MODIFY THE OUTPUT FORMAT:
-    return x, y, theta, internalStateOut 
+    return x, y, theta, internalStateOut
 
 
