@@ -28,10 +28,11 @@ def estRun(time, dt, internalStateIn, steeringAngle, pedalSpeed, measurement):
     # 4/2/2020: PF since dynamics are highly nonlinear (asymptotic parts tangent)
 
     # this internal state needs to correspond to your init function:
-    x = internalStateIn[0]
-    y = internalStateIn[1]
-    theta = internalStateIn[2]
-    myColor = internalStateIn[3]
+
+    x = internalStateIn.x
+    y = internalStateIn.y
+    theta = internalStateIn.theta
+    myColor = 'green'
 
     x = x + pedalSpeed
     y = y + pedalSpeed
@@ -53,11 +54,14 @@ def estRun(time, dt, internalStateIn, steeringAngle, pedalSpeed, measurement):
     # Update the internal state (will be passed as an argument to the function
     # at next run), must obviously be compatible with the format of
     # internalStateIn:
+    internalStateOut = internalStateIn
+    '''
     internalStateOut = [x,
                         y,
                         theta,
                         myColor
                         ]
+    '''
 
     # DO NOT MODIFY THE OUTPUT FORMAT:
     return x, y, theta, internalStateOut
