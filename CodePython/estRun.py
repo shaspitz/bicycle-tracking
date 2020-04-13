@@ -23,16 +23,12 @@ def estRun(time, dt, internalStateIn, steeringAngle, pedalSpeed, measurement):
     #  est_theta: your current best estimate for the bicycle's rotation theta
     #  internalState: the estimator's internal state, in a format that can be understood by the next call to this function
 
-    # Example code only, you'll want to heavily modify this.
-
-    # 4/2/2020: PF since dynamics are highly nonlinear (asymptotic parts tangent)
-
     # this internal state needs to correspond to your init function:
 
+    '''
     x = internalStateIn.x
     y = internalStateIn.y
     theta = internalStateIn.theta
-    myColor = 'green'
 
     x = x + pedalSpeed
     y = y + pedalSpeed
@@ -42,19 +38,14 @@ def estRun(time, dt, internalStateIn, steeringAngle, pedalSpeed, measurement):
         x = measurement[0]
         y = measurement[1]
         theta = theta + 1
-
-    # We're unreliable about our favourite colour: 
-    if myColor == 'green':
-        myColor = 'red'
-    else:
-        myColor = 'green'
-
+    '''
 
     #### OUTPUTS ####
     # Update the internal state (will be passed as an argument to the function
     # at next run), must obviously be compatible with the format of
     # internalStateIn:
     internalStateOut = internalStateIn
+    x, y, theta = internalStateIn.x, internalStateIn.y, internalStateIn.theta
     '''
     internalStateOut = [x,
                         y,
