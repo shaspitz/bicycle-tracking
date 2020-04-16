@@ -6,6 +6,7 @@ import scipy as sp
 class InternalState():
 
     def __init__(self):
+
         # State x0
         self.x = 0
         self.y = 0
@@ -20,6 +21,10 @@ class InternalState():
         self.B = 0.8
         self.r = 0.425
 
+        # Noise values
+        self.V = np.eye(self.xlen)
+        self.W = np.eye(self.zlen)
+
         # Matricies for EKF implementation (see A as method below)
         self.H = np.array([[1, 0, -1/2*self.B*np.sin(self.theta)],
                            [0, 1,  1/2*self.B*np.cos(self.theta)]])
@@ -31,14 +36,6 @@ class InternalState():
         Speed of bicycle with pedaling speed, w, as input
         '''
         return self.r*5*w
-
-    def process_model(self, u, dt):
-        '''
-        Nonlinear descretized state evolution function, q (process noise = 0)
-        '''
-        self.x = self.x + self.v(u[0])*np.cos(self.theta)*dt
-        self.y = self.y + self.v(u[0])*np.sin(self.theta)*dt
-        self.theta = self.theta + self.v(u[0])*np.tan(u[1])/self.B
 
     def A(self, u, dt):
         '''
@@ -56,11 +53,35 @@ class InternalState():
         return np.array([[self.x + 1/2*self.B*np.cos(self.theta)],
                          [self.y + 1/2*self.B*np.sin(self.theta)]])
 
+    def prior_update(self, u, dt):
+
+        # Update state using nonlinear function q(x, u, 0)
+        self.x = self.x + self.v(u[0])*np.cos(self.theta)*dt
+        self.y = self.y + self.v(u[0])*np.sin(self.theta)*dt
+        self.theta = self.theta + self.v(u[0])*np.tan(u[1])/self.B
+
+        # Update variance
+        self.P = self.A(u, dt) @ self.P @ self.A(u, dt).T + self.L @ self.V @ self.L.T
+
+    def measurement_update(self, z):
+
+        # Update state with measurement
+        z = np.array([[z[0]], [z[1]]])
+        K = self.P @ self.H.T @ np.linalg.inv(self.H @ self.P @ self.H.T + self.M @ self.W @ self.M)
+        self.update_state(self.get_state() + K @ (z - self.meas_model()))
+        self.P = (np.eye(self.xlen) - K @ self.H) @ self.P
+
     def get_state(self):
         '''
-        Place state into 2D np array
+        Output state into 2D np array
         '''
         return np.array([[self.x], [self.y], [self.theta]])
+
+    def update_state(self, state):
+        '''
+        Place 2D np array into respective states
+        '''
+        self.x, self.y, self.theta = state[0][0], state[1][0], state[2][0]
 
 
 def estInitialize():

@@ -25,6 +25,12 @@ def estRun(time, dt, internalStateIn, steeringAngle, pedalSpeed, measurement):
 
     # this internal state needs to correspond to your init function:
 
+    # EKF Prior update
+    internalStateIn.prior_update([steeringAngle, pedalSpeed], dt)
+
+    # EKF measurement update
+    internalStateIn.measurement_update(measurement)
+
     '''
     x = internalStateIn.x
     y = internalStateIn.y
