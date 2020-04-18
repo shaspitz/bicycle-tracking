@@ -62,7 +62,7 @@ class InternalState():
         self.x = self.x + self.v(u[0])*np.cos(self.theta)*dt
         self.y = self.y + self.v(u[0])*np.sin(self.theta)*dt
         self.theta = self.theta + self.v(u[0])*np.tan(u[1])/self.B
-        
+
     def measurement_update(self, z):
 
         # Update state with measurement
