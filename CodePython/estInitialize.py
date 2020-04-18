@@ -55,19 +55,19 @@ class InternalState():
 
     def prior_update(self, u, dt):
 
+        # Update variance
+        self.P = self.A(u, dt) @ self.P @ self.A(u, dt).T + self.L @ self.V @ self.L.T
+
         # Update state using nonlinear function q(x, u, 0)
         self.x = self.x + self.v(u[0])*np.cos(self.theta)*dt
         self.y = self.y + self.v(u[0])*np.sin(self.theta)*dt
         self.theta = self.theta + self.v(u[0])*np.tan(u[1])/self.B
-
-        # Update variance
-        self.P = self.A(u, dt) @ self.P @ self.A(u, dt).T + self.L @ self.V @ self.L.T
-
+        
     def measurement_update(self, z):
 
         # Update state with measurement
         z = np.array([[z[0]], [z[1]]])
-        K = self.P @ self.H.T @ np.linalg.inv(self.H @ self.P @ self.H.T + self.M @ self.W @ self.M)
+        K = self.P @ self.H.T @ np.linalg.inv(self.H @ self.P @ self.H.T + self.M @ self.W @ self.M.T)
         self.update_state(self.get_state() + K @ (z - self.meas_model()))
         self.P = (np.eye(self.xlen) - K @ self.H) @ self.P
 

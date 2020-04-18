@@ -29,7 +29,8 @@ def estRun(time, dt, internalStateIn, steeringAngle, pedalSpeed, measurement):
     internalStateIn.prior_update([steeringAngle, pedalSpeed], dt)
 
     # EKF measurement update
-    internalStateIn.measurement_update(measurement)
+    if not((all(np.isnan(measurement)))):
+        internalStateIn.measurement_update(measurement)
 
     '''
     x = internalStateIn.x
@@ -52,6 +53,7 @@ def estRun(time, dt, internalStateIn, steeringAngle, pedalSpeed, measurement):
     # internalStateIn:
     internalStateOut = internalStateIn
     x, y, theta = internalStateIn.x, internalStateIn.y, internalStateIn.theta
+
     '''
     internalStateOut = [x,
                         y,
