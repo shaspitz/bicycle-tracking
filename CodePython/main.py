@@ -4,7 +4,7 @@
 
 # Changes:
 # April 05:
-# - print run number to help keep track. 
+# - print run number to help keep track.
 # - corrected final error output to be in [-pi, pi]
 
 import numpy as np

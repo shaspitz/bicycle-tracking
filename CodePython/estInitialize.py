@@ -25,11 +25,8 @@ class InternalState():
         self.V = np.eye(self.xlen)
         self.W = np.eye(self.zlen)
 
-        # Matricies for EKF implementation (see A as method below)
-        self.H = np.array([[1, 0, -1/2*self.B*np.sin(self.theta)],
-                           [0, 1,  1/2*self.B*np.cos(self.theta)]])
-        self.L = np.eye(self.xlen)
-        self.M = np.eye(self.zlen)
+        # Particle filter parameters
+        self.Np = 100
 
     def v(self, w):
         '''
