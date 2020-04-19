@@ -7,15 +7,18 @@ class InternalState():
 
     def __init__(self):
 
-        # State x0
-        self.x = 0
-        self.y = 0
-        self.theta = np.pi/4
+        # Number of particles
+        self.Np = 100
+
+        # Initalize PF with particles sampled from pdf, f(x(0))
+        # NOTE: ADJUST f(x(0)) later
+        self.x = np.random.normal(0, 1, self.Np)
+        self.y = np.random.normal(0, 1, self.Np)
+        self.theta = np.random.normal(np.pi/4, 1, self.Np)
+
+        # State and measurement lengths
         self.xlen = 3
         self.zlen = 2
-
-        # Covariance matrix P0
-        self.P = np.eye(self.xlen)
 
         # System parameters with uncertainity
         self.B = 0.8
@@ -25,60 +28,57 @@ class InternalState():
         self.V = np.eye(self.xlen)
         self.W = np.eye(self.zlen)
 
-        # Particle filter parameters
-        self.Np = 100
-
     def v(self, w):
         '''
         Speed of bicycle with pedaling speed, w, as input
         '''
         return self.r*5*w
 
-    def A(self, u, dt):
+    def meas_likelihood(self, xp_n, z):
         '''
-        Linearized A matrix for EKF implementation
+        Need to update this with change of variables output
+        (note xp_n is a 3 state group from self.get_state)
         '''
-        return np.array([[1, 0, -self.v(u[0])*dt*np.sin(self.theta)],
-                         [0, 1,  self.v(u[0])*dt*np.cos(self.theta)],
-                         [0, 0,  1]])
-
-    def meas_model(self):
-        '''
-        Nonlinear measurement function, h (meas noise = 0)
-        Returns measurment vector
-        '''
-        return np.array([[self.x + 1/2*self.B*np.cos(self.theta)],
-                         [self.y + 1/2*self.B*np.sin(self.theta)]])
+        return 1
 
     def prior_update(self, u, dt):
 
-        # Update variance
-        self.P = self.A(u, dt) @ self.P @ self.A(u, dt).T + self.L @ self.V @ self.L.T
+        # sample process noise particles (unbiased for now)
+        vk = np.array([np.random.normal(0, self.V[x][x], self.Np) for x in range(self.xlen)])
 
-        # Update state using nonlinear function q(x, u, 0)
-        self.x = self.x + self.v(u[0])*np.cos(self.theta)*dt
-        self.y = self.y + self.v(u[0])*np.sin(self.theta)*dt
-        self.theta = self.theta + self.v(u[0])*np.tan(u[1])/self.B
+        # Simulate particles forward with noise using nl function q(x, u, vk)
+        self.x = self.x + self.v(u[0])*np.cos(self.theta)*dt + vk[0]
+        self.y = self.y + self.v(u[0])*np.sin(self.theta)*dt + vk[1]
+        self.theta = self.theta + self.v(u[0])*np.tan(u[1])/self.B + vk[2]
 
     def measurement_update(self, z):
 
-        # Update state with measurement
-        z = np.array([[z[0]], [z[1]]])
-        K = self.P @ self.H.T @ np.linalg.inv(self.H @ self.P @ self.H.T + self.M @ self.W @ self.M.T)
-        self.update_state(self.get_state() + K @ (z - self.meas_model()))
-        self.P = (np.eye(self.xlen) - K @ self.H) @ self.P
+        # Scale particles by meas likelihood and apply normalization const
+        beta = np.array([self.meas_likelihood(xp_n, z) for xp_n in self.get_state()])
+        alpha = np.sum(beta)
+        beta = beta / alpha
+
+        # Resampling
+        beta_sum = np.cumsum(beta)
+        xm = np.zeros((self.Np, self.xlen))
+        for i in range(self.Np):
+            r = np.random.uniform()
+            # first occurance where beta_sum[n_index] >= r
+            n_index = np.nonzero(beta_sum > r)[0][0]
+            xm[i] = self.get_state()[n_index]
+
+        # Update state (can make prettier later, see self.update_state())
+        self.x, self.y, self.theta = xm[:, 0], xm[:, 1], xm[:, 2]
 
     def get_state(self):
         '''
         Output state into 2D np array
+        (first iterator corresponds to each 3 state particle group)
         '''
-        return np.array([[self.x], [self.y], [self.theta]])
+        return np.array([[self.x[i], self.y[i], self.theta[i]] for i in range(self.Np)])
 
-    def update_state(self, state):
-        '''
-        Place 2D np array into respective states
-        '''
-        self.x, self.y, self.theta = state[0][0], state[1][0], state[2][0]
+    def update_state(self):
+        return 0
 
 
 def estInitialize():
