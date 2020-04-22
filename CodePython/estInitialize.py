@@ -26,7 +26,8 @@ class InternalState():
 
         # Noise values
         self.V = np.eye(self.xlen)
-        self.W = np.eye(self.zlen)
+        self.W = np.array([[1.088070104075678, 0],
+                           [0,2.9844723942433373]])
 
     def v(self, w):
         '''
