@@ -36,33 +36,33 @@ timeDataNums = np.array([t for i_t, t in enumerate(timeData) if not(np.isnan(xDa
 deltaTimeDataNums = np.array([timeDataNums[i_t] - timeDataNums[i_t-1] for i_t, t in enumerate(timeDataNums)])
 deltaTimeDataNums = deltaTimeDataNums[1:]
 
-# Calculate the mean and variance
-xMean = np.mean(xDataNums)
-yMean = np.mean(yDataNums)
-xVar = np.var(xDataNums)
-yVar = np.var(yDataNums)
+# Use the measurement model to determine x1 and y1
+B = 0.8
+x1DataNums = xDataNums - 1/2*B*np.cos(trueTheta)
+y1DataNums = yDataNums - 1/2*B*np.sin(trueTheta)
 
-# Calculate the bias
-xbias = trueX - xMean
-ybias = trueY - yMean
+# Calculate the mean and variance
+x1Mean = np.mean(x1DataNums)
+y1Mean = np.mean(y1DataNums)
+x1Var = np.var(x1DataNums)
+y1Var = np.var(y1DataNums)
+
 
 print("X,Y Means: ")
-print(xMean, yMean)
+print(x1Mean, y1Mean)
 print("X,Y Variances: ")
-print(xVar,yVar)
-print("X,Y Bias: ")
-print(xbias, ybias)
+print(x1Var,y1Var)
 
 # Create functions for the pdf of x,y given the mean and var to anazlyze against the data
-xpdf = np.linspace(xMean - 3*np.sqrt(xVar), xMean + 3*np.sqrt(xVar), 100)
-ypdf = np.linspace(yMean - 3*np.sqrt(yVar), yMean + 3*np.sqrt(yVar), 100)
+xpdf = np.linspace(x1Mean - 3*np.sqrt(x1Var), x1Mean + 3*np.sqrt(x1Var), 100)
+ypdf = np.linspace(y1Mean - 3*np.sqrt(y1Var), y1Mean + 3*np.sqrt(y1Var), 100)
 
 num_bins = 50
 
 plt.figure(0)
-plt.hist(xDataNums, num_bins, facecolor='blue', edgecolor='black', alpha=1, density=True)
-plt.axvline(xMean, color = 'r')
-plt.plot(xpdf, np.array([normalpdf(xMean, xVar, x) for x in xpdf]), color = 'r')
+plt.hist(x1DataNums, num_bins, facecolor='blue', edgecolor='black', alpha=1, density=True)
+plt.axvline(x1Mean, color = 'r')
+plt.plot(xpdf, np.array([normalpdf(x1Mean, x1Var, x) for x in xpdf]), color = 'r')
 plt.axvline(trueX, color = 'g')
 plt.xlabel('x')
 plt.ylabel('f(x)')
@@ -70,9 +70,9 @@ plt.title(r'Histogram of X - Calibration Data'
           + ' with bin size = ' + repr(2/num_bins), fontsize=10)
 
 plt.figure(1)
-plt.hist(yDataNums, num_bins, facecolor='blue', edgecolor='black', alpha=1, density=True)
-plt.axvline(yMean, color = 'r')
-plt.plot(ypdf, np.array([normalpdf(yMean, yVar, y) for y in ypdf]), color = 'r')
+plt.hist(y1DataNums, num_bins, facecolor='blue', edgecolor='black', alpha=1, density=True)
+plt.axvline(y1Mean, color = 'r')
+plt.plot(ypdf, np.array([normalpdf(y1Mean, y1Var, y) for y in ypdf]), color = 'r')
 plt.axvline(trueY, color = 'g')
 plt.xlabel('y')
 plt.ylabel('f(y)')

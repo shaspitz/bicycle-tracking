@@ -24,12 +24,7 @@ class InternalState():
         # Noise values
         self.V = np.eye(self.xlen)
         self.W = np.array([[1.088070104075678, 0],
-                           [0,2.9844723942433373]])
-
-        # Measurement bias
-        xbias = -0.1875236420501872 
-        ybias = -0.39626958135732115   
-        self.measurementBias = np.array([[xbias], [ybias]])      
+                           [0,2.9844723942433373]])  
 
         # Matricies for EKF implementation (see A as method below)
         self.H = np.array([[1, 0, -1/2*self.B*np.sin(self.theta)],
