@@ -8,6 +8,10 @@ class InternalState():
     def __init__(self):
 
         # Number of particles
+        '''
+        Stick with 100 particles for testing, 200 particles took about 10 sec
+        and we need to stay under 200 particles when submitting.
+        '''
         self.Np = 100
 
         # Initalize PF with particles sampled from pdf, f(x(0))
@@ -91,9 +95,6 @@ class InternalState():
         '''
         return np.array([[self.x[i], self.y[i],
                           self.theta[i]] for i in range(self.Np)])
-
-    def update_state(self):
-        return 0
 
 
 def estInitialize():
