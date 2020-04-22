@@ -32,21 +32,6 @@ def estRun(time, dt, internalStateIn, steeringAngle, pedalSpeed, measurement):
     if not(all(np.isnan(measurement))):
         internalStateIn.measurement_update(measurement)
 
-    '''
-    x = internalStateIn.x
-    y = internalStateIn.y
-    theta = internalStateIn.theta
-
-    x = x + pedalSpeed
-    y = y + pedalSpeed
-
-    if not (np.isnan(measurement[0]) or np.isnan(measurement[1])):
-        # have a valid measurement
-        x = measurement[0]
-        y = measurement[1]
-        theta = theta + 1
-    '''
-
     #### OUTPUTS ####
     # Update the internal state (will be passed as an argument to the function
     # at next run), must obviously be compatible with the format of
@@ -55,14 +40,6 @@ def estRun(time, dt, internalStateIn, steeringAngle, pedalSpeed, measurement):
     # Can make this prettier
     internalStateOut = internalStateIn
     x, y, theta = np.mean(internalStateIn.x), np.mean(internalStateIn.y), np.mean(internalStateIn.theta)
-
-    '''
-    internalStateOut = [x,
-                        y,
-                        theta,
-                        myColor
-                        ]
-    '''
 
     # DO NOT MODIFY THE OUTPUT FORMAT:
     return x, y, theta, internalStateOut

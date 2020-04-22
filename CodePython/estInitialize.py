@@ -27,7 +27,7 @@ class InternalState():
         # Noise values
         self.V = np.eye(self.xlen)
         self.W = np.array([[1.088070104075678, 0],
-                           [0,2.9844723942433373]])
+                           [0, 2.9844723942433373]])
 
     def v(self, w):
         '''
@@ -40,12 +40,24 @@ class InternalState():
         Need to update this with change of variables output
         (note xp_n is a 3 state group from self.get_state)
         '''
-        return 1
+        # Convert measurement tuple into 2D np array
+        z = np.array([[z[0]], [z[1]]])
+
+        # Define change of variables expression h
+        h = z - np.array([[xp_n[0] + 1/2*self.B*np.cos(xp_n[2])],
+                          [xp_n[1] + 1/2*self.B*np.sin(xp_n[2])]])
+
+        # Return normal pdf, f(w) evaluated at h(z, x)
+        meas_likelihood = 1/((np.pi)**(self.xlen/2)*np.sqrt(
+            np.linalg.det(self.W)))*np.exp(-1/2*h.T @ np.linalg.inv(self.W) @ h)
+
+        return meas_likelihood
 
     def prior_update(self, u, dt):
 
         # sample process noise particles (unbiased for now)
-        vk = np.array([np.random.normal(0, self.V[x][x], self.Np) for x in range(self.xlen)])
+        vk = np.array([np.random.normal(0, self.V[x][x],
+                                        self.Np) for x in range(self.xlen)])
 
         # Simulate particles forward with noise using nl function q(x, u, vk)
         self.x = self.x + self.v(u[0])*np.cos(self.theta)*dt + vk[0]
@@ -55,7 +67,8 @@ class InternalState():
     def measurement_update(self, z):
 
         # Scale particles by meas likelihood and apply normalization const
-        beta = np.array([self.meas_likelihood(xp_n, z) for xp_n in self.get_state()])
+        beta = np.array([self.meas_likelihood(xp_n,
+                                              z) for xp_n in self.get_state()])
         alpha = np.sum(beta)
         beta = beta / alpha
 
@@ -76,7 +89,8 @@ class InternalState():
         Output state into 2D np array
         (first iterator corresponds to each 3 state particle group)
         '''
-        return np.array([[self.x[i], self.y[i], self.theta[i]] for i in range(self.Np)])
+        return np.array([[self.x[i], self.y[i],
+                          self.theta[i]] for i in range(self.Np)])
 
     def update_state(self):
         return 0
