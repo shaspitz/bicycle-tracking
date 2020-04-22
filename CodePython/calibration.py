@@ -86,4 +86,66 @@ plt.ylabel('f(deltaTime)')
 plt.title(r'Histogram of deltaTime - Calibration Data'
           + ' with bin size = ' + repr(2/num_bins), fontsize=10)
 
+# Estimate f(x(0)) by examining the inital measurements from all of the data
+
+x0Data, y0Data = np.zeros((100,1)),np.zeros((100,1))
+for data in range(0,100):
+    experimentalRun = data
+    experimentalData = np.genfromtxt('../data/run_{0:03d}.csv'.format(experimentalRun), delimiter=',')
+    idx = 0
+    x0, y0 = experimentalData[idx,3], experimentalData[idx,4]
+    while np.isnan(x0):
+        idx = idx + 1
+        x0 = experimentalData[idx,3]
+    idx = 0
+    while np.isnan(y0):
+        idx = idx + 1
+        y0 = experimentalData[idx,4]
+    x0Data[data], y0Data[data] = x0, y0
+
+# Use the measurement model to determine x0 and y0
+B = 0.8
+theta0 = np.pi / 4
+x0DataNums = x0Data - 1/2*B*np.cos(theta0)
+y0DataNums = y0Data - 1/2*B*np.sin(theta0)
+
+#x0DataNums = x0Data 
+#y0DataNums = y0Data 
+
+# Calculate the mean and variance
+x0Mean = np.mean(x0DataNums)
+y0Mean = np.mean(y0DataNums)
+x0Var = np.var(x0DataNums)
+y0Var = np.var(y0DataNums)
+
+
+print("X0,Y0 Means: ")
+print(x0Mean, y0Mean)
+print("X0,Y0 Variances: ")
+print(x0Var,y0Var)
+
+# Create functions for the pdf of x,y given the mean and var to anazlyze against the data
+x0pdf = np.linspace(x0Mean - 3*np.sqrt(x0Var), x0Mean + 3*np.sqrt(x0Var), 100)
+y0pdf = np.linspace(y0Mean - 3*np.sqrt(y0Var), y0Mean + 3*np.sqrt(y0Var), 100)
+
+num_bins = 20
+
+plt.figure(3)
+plt.hist(x0DataNums, num_bins, facecolor='blue', edgecolor='black', alpha=1, density=True)
+plt.axvline(x0Mean, color = 'r')
+plt.plot(x0pdf, np.array([normalpdf(x0Mean, x0Var, x) for x in x0pdf]), color = 'r')
+plt.xlabel('x0')
+plt.ylabel('f(x)')
+plt.title(r'Histogram of X0'
+          + ' with bin size = ' + repr(2/num_bins), fontsize=10)
+
+plt.figure(4)
+plt.hist(y0DataNums, num_bins, facecolor='blue', edgecolor='black', alpha=1, density=True)
+plt.axvline(y0Mean, color = 'r')
+plt.plot(y0pdf, np.array([normalpdf(y0Mean, y0Var, y) for y in y0pdf]), color = 'r')
+plt.xlabel('y0')
+plt.ylabel('f(y)')
+plt.title(r'Histogram of Y0'
+          + ' with bin size = ' + repr(2/num_bins), fontsize=10)
+
 plt.show()
