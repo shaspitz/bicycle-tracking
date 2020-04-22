@@ -12,9 +12,9 @@ class InternalState():
 
         # Initalize PF with particles sampled from pdf, f(x(0))
         # NOTE: ADJUST f(x(0)) later
-        self.x = np.random.normal(0, 1, self.Np)
-        self.y = np.random.normal(0, 1, self.Np)
-        self.theta = np.random.normal(np.pi/4, 1, self.Np)
+        self.x = np.random.normal(0, 7.0241800107377825, self.Np)
+        self.y = np.random.normal(0, 15.04128926026523, self.Np)
+        self.theta = np.random.normal(np.pi/4, (np.pi/12)**2, self.Np)
 
         # State and measurement lengths
         self.xlen = 3
@@ -106,7 +106,7 @@ def estInitialize():
     #  'PF' for Particle Filter
     #  'OTHER: XXX' if you're using something else, in which case please
     #                 replace "XXX" with a (very short) description
-    estimatorType = 'EKF'
+    estimatorType = 'PF'
 
     return internalState, studentNames, estimatorType
 
