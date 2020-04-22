@@ -24,7 +24,7 @@ class InternalState():
         # Noise values
         self.V = np.eye(self.xlen)
         self.W = np.array([[1.088070104075678, 0],
-                           [0,2.9844723942433373]])  
+                           [0, 2.9844723942433373]])
 
         # Matricies for EKF implementation (see A as method below)
         self.H = np.array([[1, 0, -1/2*self.B*np.sin(self.theta)],
@@ -68,8 +68,9 @@ class InternalState():
 
         # Update state with measurement
         z = np.array([[z[0]], [z[1]]])
-        K = self.P @ self.H.T @ np.linalg.inv(self.H @ self.P @ self.H.T + self.M @ self.W @ self.M.T)
-        self.update_state(self.get_state() + K @ ((z - self.meas_model()))
+        K = self.P @ self.H.T @ np.linalg.inv(
+            self.H @ self.P @ self.H.T + self.M @ self.W @ self.M.T)
+        self.update_state(self.get_state() + K @ (z - self.meas_model()))
         self.P = (np.eye(self.xlen) - K @ self.H) @ self.P
 
     def get_state(self):
