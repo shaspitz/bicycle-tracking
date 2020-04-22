@@ -87,8 +87,7 @@ class InternalState():
             n_index = np.nonzero(beta_sum > r)[0][0]
             xm[i] = self.get_state()[n_index]
 
-        # Update state (can make prettier later, see self.update_state())
-        self.x, self.y, self.theta = xm[:, 0], xm[:, 1], xm[:, 2]
+        self.update_state(xm)
 
     def get_state(self):
         '''
@@ -97,6 +96,12 @@ class InternalState():
         '''
         return np.array([[self.x[i], self.y[i],
                           self.theta[i]] for i in range(self.Np)])
+
+    def update_state(self, xm):
+        '''
+        Updates state with respective particle arrays
+        '''
+        self.x, self.y, self.theta = xm[:, 0], xm[:, 1], xm[:, 2]
 
 
 def estInitialize():
