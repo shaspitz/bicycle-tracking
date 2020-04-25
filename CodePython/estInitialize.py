@@ -87,7 +87,17 @@ class InternalState():
             n_index = np.nonzero(beta_sum > r)[0][0]
             xm[i] = self.get_state()[n_index]
 
+        # xm = self.roughening(xm)
         self.update_state(xm)
+    
+    def roughening(self, xm):
+        d = 3
+        K = 0.001
+        for i in range(d):
+            Ei = np.abs(np.max(xm[:,i]) - np.min(xm[:,i]))
+            sigma_i = K * Ei * self.Np ** (-1 / d)
+            xm[:,i] += np.random.normal(0, sigma_i, size=xm[:,i].shape)
+        return xm
 
     def get_state(self):
         '''
