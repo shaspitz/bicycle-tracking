@@ -27,7 +27,7 @@ class InternalState():
         self.y = np.random.normal(0, np.sqrt(15.04128926026523), self.Np)
         self.theta = np.random.normal(np.pi/4, np.sqrt(self.V[2][2]), self.Np)
         self.B = np.random.uniform(0.8 + self.bound_B[0], 0.8 + self.bound_B[1], self.Np)
-        self.r = np.random.uniform(0.425 + self.bound_r[0], 0.425 +  self.bound_r[1], self.Np)
+        self.r = np.random.uniform(0.425 + self.bound_r[0], 0.425 + self.bound_r[1], self.Np)
 
         # State and measurement lengths
         self.xlen = 5
@@ -106,8 +106,8 @@ class InternalState():
         d = self.xlen
         K = 0.01
         for i in range(d):
-            Ei = np.abs(np.max(xm[:,i]) - np.min(xm[:,i]))
-            #Ei = np.max(np.array([
+            Ei = np.abs(np.max(xm[:, i]) - np.min(xm[:, i]))
+            # Ei = np.max(np.array([
             #    np.abs(xm[idx, i] - xm[idx - 1, i]) for idx, x in enumerate(
             #        np.sort(xm[1:-1, i]))]))
             sigma_i = K * Ei * self.Np ** (-1 / d)
