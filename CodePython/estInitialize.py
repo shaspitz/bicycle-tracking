@@ -14,23 +14,24 @@ class InternalState():
         '''
         self.Np = 100
 
+        # Variances for first three process noises and measurment noises
+        self.V = np.diag([1, 1, (np.pi/12)**2])
+        self.W = np.diag([1.088070104075678, 2.9844723942433373])
+
+        # uniform dist bounds for last two process noises (from manufac spec)
+        self.bound_B = np.array([0.8 - 0.8/10, 0.8 + 0.8/10])
+        self.bound_r = np.array([0.425 - 0.425/20, 0.425 + 0.425/20])
+
         # Initalize PF with particles sampled from pdf, f(x(0))
-        # NOTE: ADJUST f(x(0)) later
         self.x = np.random.normal(0, np.sqrt(7.0241800107377825), self.Np)
         self.y = np.random.normal(0, np.sqrt(15.04128926026523), self.Np)
-        self.theta = np.random.normal(np.pi/4, (np.pi/12), self.Np)
-        self.B = np.random.normal(0.8, 0.8/10, self.Np)
-        self.r = np.random.normal(0.425, 0.425/20, self.Np)
+        self.theta = np.random.normal(np.pi/4, np.sqrt(self.V[2][2]), self.Np)
+        self.B = np.random.uniform(self.bound_B[0], self.bound_B[1], self.Np)
+        self.r = np.random.uniform(self.bound_r[0], self.bound_r[1], self.Np)
 
         # State and measurement lengths
         self.xlen = 5
         self.zlen = 2
-
-        # System parameters with uncertainity
-
-        # Noise values
-        self.V = np.diag([1, 1, (np.pi/12)**2, 0.8/10, 0.425/20])
-        self.W = np.diag([1.088070104075678, 2.9844723942433373])
 
     def v(self, w, r):
         '''
@@ -58,9 +59,13 @@ class InternalState():
 
     def prior_update(self, u, dt):
 
-        # sample process noise particles (unbiased for now)
-        vk = np.array([np.random.normal(0, self.V[x][x],
-                                        self.Np) for x in range(self.xlen)])
+        # sample process noise particles
+        vk = np.zeros((self.xlen, self.Np))
+        for x in range(self.xlen - 2):
+            vk[x] = np.random.normal(0, self.V[x][x], self.Np)
+
+#         vk = np.array([np.random.normal(0, self.V[x][x],
+#                                         self.Np) for x in range(self.xlen)])
 
         # Simulate particles forward with noise using nl function q(x, u, vk)
         x_old = self.x
