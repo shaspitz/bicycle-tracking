@@ -19,15 +19,15 @@ class InternalState():
         self.W = np.diag([1.088070104075678, 2.9844723942433373])
 
         # uniform dist bounds for last two process noises (from manufac spec)
-        self.bound_B = np.array([0.8 - 0.8/10, 0.8 + 0.8/10])
-        self.bound_r = np.array([0.425 - 0.425/20, 0.425 + 0.425/20])
+        self.bound_B = np.array([-0.8/10, 0.8/10])
+        self.bound_r = np.array([-0.425/20, 0.425/20])
 
         # Initalize PF with particles sampled from pdf, f(x(0))
         self.x = np.random.normal(0, np.sqrt(7.0241800107377825), self.Np)
         self.y = np.random.normal(0, np.sqrt(15.04128926026523), self.Np)
         self.theta = np.random.normal(np.pi/4, np.sqrt(self.V[2][2]), self.Np)
-        self.B = np.random.uniform(self.bound_B[0], self.bound_B[1], self.Np)
-        self.r = np.random.uniform(self.bound_r[0], self.bound_r[1], self.Np)
+        self.B = np.random.uniform(0.8 + self.bound_B[0], 0.8 + self.bound_B[1], self.Np)
+        self.r = np.random.uniform(0.425 + self.bound_r[0], 0.425 +  self.bound_r[1], self.Np)
 
         # State and measurement lengths
         self.xlen = 5
@@ -62,10 +62,9 @@ class InternalState():
         # sample process noise particles
         vk = np.zeros((self.xlen, self.Np))
         for x in range(self.xlen - 2):
-            vk[x] = np.random.normal(0, self.V[x][x], self.Np)
-
-#         vk = np.array([np.random.normal(0, self.V[x][x],
-#                                         self.Np) for x in range(self.xlen)])
+            vk[x] = np.random.normal(0, np.sqrt(self.V[x][x]), self.Np)
+        for i, bounds in enumerate([self.bound_B, self.bound_r]):
+            vk[3+i] = np.random.uniform(bounds[0], bounds[1], self.Np)
 
         # Simulate particles forward with noise using nl function q(x, u, vk)
         x_old = self.x
