@@ -19,27 +19,24 @@ class InternalState():
         self.x = np.random.normal(0, np.sqrt(7.0241800107377825), self.Np)
         self.y = np.random.normal(0, np.sqrt(15.04128926026523), self.Np)
         self.theta = np.random.normal(np.pi/4, (np.pi/12), self.Np)
+        self.B = np.random.normal(0.8, 0.8/10, self.Np)
+        self.r = np.random.normal(0.425, 0.425/20, self.Np)
 
         # State and measurement lengths
-        self.xlen = 3
+        self.xlen = 5
         self.zlen = 2
 
         # System parameters with uncertainity
-        self.B = 0.8
-        self.r = 0.425
 
         # Noise values
-        self.V = np.array([[1, 0, 0],
-                           [0, 1, 0],
-                           [0, 0, (np.pi/12)**2]])
-        self.W = np.array([[1.088070104075678, 0],
-                           [0, 2.9844723942433373]])
+        self.V = np.diag([1, 1, (np.pi/12)**2, 0.8/10, 0.425/20])
+        self.W = np.diag([1.088070104075678, 2.9844723942433373])
 
-    def v(self, w):
+    def v(self, w, r):
         '''
         Speed of bicycle with pedaling speed, w, as input
         '''
-        return self.r*5*w
+        return r*5*w
 
     def meas_likelihood(self, xp_n, z):
         '''
@@ -50,8 +47,8 @@ class InternalState():
         z = np.array([[z[0]], [z[1]]])
 
         # Define change of variables expression h
-        h = z - np.array([[xp_n[0] + 1/2*self.B*np.cos(xp_n[2])],
-                          [xp_n[1] + 1/2*self.B*np.sin(xp_n[2])]])
+        h = z - np.array([[xp_n[0] + 1/2*xp_n[3]*np.cos(xp_n[2])],
+                          [xp_n[1] + 1/2*xp_n[3]*np.sin(xp_n[2])]])
 
         # Return normal pdf, f(w) evaluated at h(z, x)
         meas_likelihood = 1/((np.pi)**(self.xlen/2)*np.sqrt(
@@ -66,9 +63,17 @@ class InternalState():
                                         self.Np) for x in range(self.xlen)])
 
         # Simulate particles forward with noise using nl function q(x, u, vk)
-        self.x = self.x + self.v(u[0])*np.cos(self.theta)*dt + vk[0]
-        self.y = self.y + self.v(u[0])*np.sin(self.theta)*dt + vk[1]
-        self.theta = self.theta + self.v(u[0])*np.tan(u[1])/self.B + vk[2]
+        x_old = self.x
+        y_old = self.y
+        theta_old = self.theta
+        B_old = self.B
+        r_old = self.r
+
+        self.x = x_old + self.v(u[0], r_old)*np.cos(theta_old)*dt + vk[0]
+        self.y = y_old + self.v(u[0], r_old)*np.sin(theta_old)*dt + vk[1]
+        self.theta = theta_old + self.v(u[0], r_old)*np.tan(u[1])/B_old + vk[2]
+        self.B = self.B
+        self.r = self.r
 
     def measurement_update(self, z):
 
@@ -89,24 +94,27 @@ class InternalState():
 
         xm = self.roughening(xm)
         self.update_state(xm)
-    
+
     def roughening(self, xm):
         d = 3
         K = 0.01
         for i in range(d):
-            #Ei = np.abs(np.max(xm[:,i]) - np.min(xm[:,i]))
-            Ei = np.max(np.array([np.abs(xm[idx, i] - xm[idx - 1, i]) for idx, x in enumerate(np.sort(xm[1:-1, i])) ]))
+            # Ei = np.abs(np.max(xm[:,i]) - np.min(xm[:,i]))
+            Ei = np.max(np.array([
+                np.abs(xm[idx, i] - xm[idx - 1, i]) for idx, x in enumerate(
+                    np.sort(xm[1:-1, i]))]))
             sigma_i = K * Ei * self.Np ** (-1 / d)
-            xm[:,i] += np.random.normal(0, sigma_i, size=xm[:,i].shape)
+            xm[:, i] += np.random.normal(0, sigma_i, size=xm[:, i].shape)
         return xm
 
     def get_state(self):
         '''
         Output state into 2D np array
-        (first iterator corresponds to each 3 state particle group)
+        (first iterator corresponds to each 5 state particle group)
         '''
         return np.array([[self.x[i], self.y[i],
-                          self.theta[i]] for i in range(self.Np)])
+                          self.theta[i], self.B[i],
+                          self.r[i]] for i in range(self.Np)])
 
     def update_state(self, xm):
         '''
