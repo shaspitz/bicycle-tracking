@@ -72,8 +72,11 @@ class InternalState():
         self.x = x_old + self.v(u[0], r_old)*np.cos(theta_old)*dt + vk[0]
         self.y = y_old + self.v(u[0], r_old)*np.sin(theta_old)*dt + vk[1]
         self.theta = theta_old + self.v(u[0], r_old)*np.tan(u[1])/B_old + vk[2]
-        self.B = B_old
-        self.r = r_old
+        self.B = B_old + vk[3]
+        self.r = r_old + vk[4]
+
+        # Testing!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        print(np.mean(self.B), np.mean(self.r))
 
     def measurement_update(self, z):
 
