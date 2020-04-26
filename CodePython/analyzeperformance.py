@@ -11,7 +11,7 @@ from estRun import estRun
 from estInitialize import estInitialize
 
 startingRun = 1
-endingRun = 99
+endingRun = 20
 numRuns = endingRun - startingRun + 1
 
 xErrorArr = np.zeros((1,numRuns))

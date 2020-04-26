@@ -18,9 +18,9 @@ class InternalState():
         self.V = np.diag([1, 1, (np.pi/12)**2])
         self.W = np.diag([1.088070104075678, 2.9844723942433373])
 
-        # uniform dist bounds for last two process noises (from manufac spec)
-        self.bound_B = np.array([-0.8/10, 0.8/10])
-        self.bound_r = np.array([-0.425/20, 0.425/20])
+        # uniform dist bounds for last two process noises (from manufac spec divided by two)
+        self.bound_B = np.array([-0.8/20, 0.8/20])
+        self.bound_r = np.array([-0.425/40, 0.425/40])
 
         # Initalize PF with particles sampled from pdf, f(x(0))
         self.x = np.random.normal(0, np.sqrt(7.0241800107377825), self.Np)
@@ -80,7 +80,7 @@ class InternalState():
         self.r = r_old + vk[4]
 
         # Testing!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        print(np.mean(self.B), np.mean(self.r))
+#         print(np.mean(self.B), np.mean(self.r))
 
     def measurement_update(self, z):
 
