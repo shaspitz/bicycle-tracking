@@ -52,7 +52,7 @@ class InternalState():
                           [xp_n[1] + 1/2*xp_n[3]*np.sin(xp_n[2])]])
 
         # Return normal pdf, f(w) evaluated at h(z, x)
-        meas_likelihood = 1/((np.pi)**(self.xlen/2)*np.sqrt(
+        meas_likelihood = 1/((2*np.pi)**(self.xlen/2)*np.sqrt(
             np.linalg.det(self.W)))*np.exp(-1/2*h.T @ np.linalg.inv(self.W) @ h)
 
         return meas_likelihood
