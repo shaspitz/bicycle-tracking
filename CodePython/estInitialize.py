@@ -99,13 +99,13 @@ class InternalState():
         self.update_state(xm)
 
     def roughening(self, xm):
-        d = 3
+        d = self.xlen
         K = 0.01
         for i in range(d):
-            # Ei = np.abs(np.max(xm[:,i]) - np.min(xm[:,i]))
-            Ei = np.max(np.array([
-                np.abs(xm[idx, i] - xm[idx - 1, i]) for idx, x in enumerate(
-                    np.sort(xm[1:-1, i]))]))
+            Ei = np.abs(np.max(xm[:,i]) - np.min(xm[:,i]))
+            #Ei = np.max(np.array([
+            #    np.abs(xm[idx, i] - xm[idx - 1, i]) for idx, x in enumerate(
+            #        np.sort(xm[1:-1, i]))]))
             sigma_i = K * Ei * self.Np ** (-1 / d)
             xm[:, i] += np.random.normal(0, sigma_i, size=xm[:, i].shape)
         return xm
