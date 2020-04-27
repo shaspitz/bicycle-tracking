@@ -10,24 +10,28 @@ class InternalState():
         # Number of particles
         '''
         Stick with 100 particles for testing, 200 particles took about 10 sec
-        and we need to stay under 200 particles when submitting.
+        and we need to stay under 30 seconds when submitting.
         '''
         self.Np = 100
 
-        # Variances for first three process noises and measurment noises
-        self.V = np.diag([1, 1, (np.pi/12)**2])
+        # Variances for process and measurement noises
+        '''
+        Note that the standard deviations for B and r are 1/3 times their
+        manufacturer's suggested tolerance. We did this since most data
+        in a normal distrubtion lies within 3 standard deviations of its
+        mean. The performace of the PF with 0 variance in B and r was
+        tested to be worse than this implementation over multiple trials.
+        A uniform distrubtion for B and r variance also performed worse.
+        '''
+        self.V = np.diag([1, 1, (np.pi/12)**2, (1/3*0.8/10)**2, (1/3*0.425/20)**2])
         self.W = np.diag([1.088070104075678, 2.9844723942433373])
-
-        # uniform dist bounds for last two process noises (from manufac spec divided by two)
-        self.bound_B = np.array([-0.8/20, 0.8/20])
-        self.bound_r = np.array([-0.425/40, 0.425/40])
 
         # Initalize PF with particles sampled from pdf, f(x(0))
         self.x = np.random.normal(0, np.sqrt(7.0241800107377825), self.Np)
         self.y = np.random.normal(0, np.sqrt(15.04128926026523), self.Np)
         self.theta = np.random.normal(np.pi/4, np.sqrt(self.V[2][2]), self.Np)
-        self.B = np.random.uniform(0.8 + self.bound_B[0], 0.8 + self.bound_B[1], self.Np)
-        self.r = np.random.uniform(0.425 + self.bound_r[0], 0.425 + self.bound_r[1], self.Np)
+        self.B = np.random.normal(0.8, np.sqrt(self.V[3][3]), self.Np)
+        self.r = np.random.normal(0.425, np.sqrt(self.V[4][4]), self.Np)
 
         # State and measurement lengths
         self.xlen = 5
@@ -61,10 +65,8 @@ class InternalState():
 
         # sample process noise particles
         vk = np.zeros((self.xlen, self.Np))
-        for x in range(self.xlen - 2):
+        for x in range(self.xlen):
             vk[x] = np.random.normal(0, np.sqrt(self.V[x][x]), self.Np)
-        for i, bounds in enumerate([self.bound_B, self.bound_r]):
-            vk[3+i] = np.random.uniform(bounds[0], bounds[1], self.Np)
 
         # Simulate particles forward with noise using nl function q(x, u, vk)
         x_old = self.x
