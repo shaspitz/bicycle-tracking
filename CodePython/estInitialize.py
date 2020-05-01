@@ -12,7 +12,7 @@ class InternalState():
         Stick with 100 particles for testing, 200 particles took about 10 sec
         and we need to stay under 30 seconds when submitting.
         '''
-        self.Np = 100
+        self.Np = 200
 
         # Variances for process and measurement noises
         '''
@@ -80,9 +80,6 @@ class InternalState():
         self.theta = theta_old + self.v(u[0], r_old)*np.tan(u[1])/B_old + vk[2]
         self.B = B_old + vk[3]
         self.r = r_old + vk[4]
-
-        # Testing!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#         print(np.mean(self.B), np.mean(self.r))
 
     def measurement_update(self, z):
 
