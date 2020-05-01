@@ -9,8 +9,8 @@ class InternalState():
 
         # Number of particles
         '''
-        Stick with 100 particles for testing, 200 particles took about 10 sec
-        and we need to stay under 30 seconds when submitting.
+        200 particles took about 10 sec per run on 16GB RAM, I7 processor.
+        We need to stay under 30 seconds when submitting so this is reasonable.
         '''
         self.Np = 200
 
