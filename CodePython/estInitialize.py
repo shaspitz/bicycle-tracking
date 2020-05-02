@@ -12,7 +12,7 @@ class InternalState():
         200 particles took about 10 sec per run on 16GB RAM, I7 processor.
         We need to stay under 30 seconds when submitting so this is reasonable.
         '''
-        self.Np = 200
+        self.Np = 1000
 
         # Variances for process and measurement noises
         '''
