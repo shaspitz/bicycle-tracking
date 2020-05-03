@@ -7,6 +7,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 from estRun import estRun
 from estInitialize import estInitialize
 
@@ -18,6 +19,8 @@ xErrorArr = np.zeros((1,numRuns))
 yErrorArr = np.zeros((1,numRuns))
 thErrorArr = np.zeros((1,numRuns))
 scoreArr = np.zeros((1,numRuns))
+
+tic = time.time()
 
 for run in range(startingRun, endingRun+1):
     # Loop thru experimental runs
@@ -74,6 +77,10 @@ for run in range(startingRun, endingRun+1):
     yErrorArr[:, run - startingRun] = ay
     thErrorArr[:, run - startingRun] = ath
     scoreArr[:, run - startingRun] = score
+
+toc = time.time()
+
+print('total time: ', toc-tic)
 
 xMeanErr = np.mean(xErrorArr)
 yMeanErr = np.mean(yErrorArr)

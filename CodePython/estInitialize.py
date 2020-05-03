@@ -7,83 +7,126 @@ class InternalState():
 
     def __init__(self):
 
-        # State x0
-        self.x = 0
-        self.y = 0
-        self.theta = np.pi/4
-        self.xlen = 3
+        # Number of particles
+        '''
+        200 particles took about 10 sec per run on 16GB RAM, I7 processor.
+        We need to stay under 30 seconds when submitting so this is reasonable.
+        '''
+        self.Np = 200
+
+        # Variances for process and measurement noises
+        '''
+        Note that the standard deviations for B and r are 1/3 times their
+        manufacturer's suggested tolerance. We did this since most data
+        in a normal distrubtion lies within 3 standard deviations of its
+        mean. The performace of the PF with 0 variance in B and r was
+        tested to be worse than this implementation over multiple trials.
+        A uniform distrubtion for B and r variance also performed worse.
+        '''
+        self.V = np.diag([1, 1, (np.pi/12)**2, (1/3*0.8/10)**2, (1/3*0.425/20)**2])
+        self.W = np.diag([1.088070104075678, 2.9844723942433373])
+
+        # Initalize PF with particles sampled from pdf, f(x(0))
+        self.x = np.random.normal(0, np.sqrt(7.0241800107377825), self.Np)
+        self.y = np.random.normal(0, np.sqrt(15.04128926026523), self.Np)
+        self.theta = np.random.normal(np.pi/4, np.sqrt(self.V[2][2]), self.Np)
+        self.B = np.random.normal(0.8, np.sqrt(self.V[3][3]), self.Np)
+        self.r = np.random.normal(0.425, np.sqrt(self.V[4][4]), self.Np)
+
+        # State and measurement lengths
+        self.xlen = 5
         self.zlen = 2
 
-        # Covariance matrix P0
-        self.P = np.eye(self.xlen)
-
-        # System parameters with uncertainity
-        self.B = 0.8
-        self.r = 0.425
-
-        # Noise values
-        self.V = np.eye(self.xlen)
-        self.W = np.array([[1.088070104075678, 0],
-                           [0, 2.9844723942433373]])
-
-        # Matricies for EKF implementation (see A as method below)
-        self.H = np.array([[1, 0, -1/2*self.B*np.sin(self.theta)],
-                           [0, 1,  1/2*self.B*np.cos(self.theta)]])
-        self.L = np.eye(self.xlen)
-        self.M = np.eye(self.zlen)
-
-    def v(self, w):
+    def v(self, w, r):
         '''
         Speed of bicycle with pedaling speed, w, as input
         '''
-        return self.r*5*w
+        return r*5*w
 
-    def A(self, u, dt):
+    def meas_likelihood(self, xp_n, z):
         '''
-        Linearized A matrix for EKF implementation
+        Need to update this with change of variables output
+        (note xp_n is a 3 state group from self.get_state)
         '''
-        return np.array([[1, 0, -self.v(u[0])*dt*np.sin(self.theta)],
-                         [0, 1,  self.v(u[0])*dt*np.cos(self.theta)],
-                         [0, 0,  1]])
+        # Convert measurement tuple into 2D np array
+        z = np.array([[z[0]], [z[1]]])
 
-    def meas_model(self):
-        '''
-        Nonlinear measurement function, h (meas noise = 0)
-        Returns measurment vector
-        '''
-        return np.array([[self.x + 1/2*self.B*np.cos(self.theta)],
-                         [self.y + 1/2*self.B*np.sin(self.theta)]])
+        # Define change of variables expression h
+        h = z - np.array([[xp_n[0] + 1/2*xp_n[3]*np.cos(xp_n[2])],
+                          [xp_n[1] + 1/2*xp_n[3]*np.sin(xp_n[2])]])
+
+        # Return normal pdf, f(w) evaluated at h(z, x)
+        meas_likelihood = 1/((2*np.pi)**(self.xlen/2)*np.sqrt(
+            np.linalg.det(self.W)))*np.exp(-1/2*h.T @ np.linalg.inv(self.W) @ h)
+
+        return meas_likelihood
 
     def prior_update(self, u, dt):
 
-        # Update variance
-        self.P = self.A(u, dt) @ self.P @ self.A(u, dt).T + self.L @ self.V @ self.L.T
+        # sample process noise particles
+        vk = np.zeros((self.xlen, self.Np))
+        for x in range(self.xlen):
+            vk[x] = np.random.normal(0, np.sqrt(self.V[x][x]), self.Np)
 
-        # Update state using nonlinear function q(x, u, 0)
-        self.x = self.x + self.v(u[0])*np.cos(self.theta)*dt
-        self.y = self.y + self.v(u[0])*np.sin(self.theta)*dt
-        self.theta = self.theta + self.v(u[0])*np.tan(u[1])/self.B
+        # Simulate particles forward with noise using nl function q(x, u, vk)
+        x_old = self.x
+        y_old = self.y
+        theta_old = self.theta
+        B_old = self.B
+        r_old = self.r
+
+        self.x = x_old + self.v(u[0], r_old)*np.cos(theta_old)*dt + vk[0]
+        self.y = y_old + self.v(u[0], r_old)*np.sin(theta_old)*dt + vk[1]
+        self.theta = theta_old + self.v(u[0], r_old)*np.tan(u[1])/B_old + vk[2]
+        self.B = B_old + vk[3]
+        self.r = r_old + vk[4]
 
     def measurement_update(self, z):
 
-        # Update state with measurement
-        z = np.array([[z[0]], [z[1]]])
-        K = self.P @ self.H.T @ np.linalg.inv(
-            self.H @ self.P @ self.H.T + self.M @ self.W @ self.M.T)
-        self.update_state(self.get_state() + K @ (z - self.meas_model()))
-        self.P = (np.eye(self.xlen) - K @ self.H) @ self.P
+        # Scale particles by meas likelihood and apply normalization const
+        beta = np.array([self.meas_likelihood(xp_n,
+                                              z) for xp_n in self.get_state()])
+        alpha = np.sum(beta)
+        beta = beta / alpha
+
+        # Resampling
+        beta_sum = np.cumsum(beta)
+        xm = np.zeros((self.Np, self.xlen))
+        for i in range(self.Np):
+            r = np.random.uniform()
+            # first occurance where beta_sum[n_index] >= r
+            n_index = np.nonzero(beta_sum > r)[0][0]
+            xm[i] = self.get_state()[n_index]
+
+        xm = self.roughening(xm)
+        self.update_state(xm)
+
+    def roughening(self, xm):
+        d = self.xlen
+        K = 0.01
+        for i in range(d):
+            Ei = np.abs(np.max(xm[:, i]) - np.min(xm[:, i]))
+            # Ei = np.max(np.array([
+            #    np.abs(xm[idx, i] - xm[idx - 1, i]) for idx, x in enumerate(
+            #        np.sort(xm[1:-1, i]))]))
+            sigma_i = K * Ei * self.Np ** (-1 / d)
+            xm[:, i] += np.random.normal(0, sigma_i, size=xm[:, i].shape)
+        return xm
 
     def get_state(self):
         '''
         Output state into 2D np array
+        (first iterator corresponds to each 5 state particle group)
         '''
-        return np.array([[self.x], [self.y], [self.theta]])
+        return np.array([[self.x[i], self.y[i],
+                          self.theta[i], self.B[i],
+                          self.r[i]] for i in range(self.Np)])
 
-    def update_state(self, state):
+    def update_state(self, xm):
         '''
-        Place 2D np array into respective states
+        Updates state with respective particle arrays
         '''
-        self.x, self.y, self.theta = state[0][0], state[1][0], state[2][0]
+        self.x, self.y, self.theta = xm[:, 0], xm[:, 1], xm[:, 2]
 
 
 def estInitialize():
@@ -110,7 +153,7 @@ def estInitialize():
     #  'PF' for Particle Filter
     #  'OTHER: XXX' if you're using something else, in which case please
     #                 replace "XXX" with a (very short) description
-    estimatorType = 'EKF'
+    estimatorType = 'PF'
 
     return internalState, studentNames, estimatorType
 

@@ -36,8 +36,9 @@ def estRun(time, dt, internalStateIn, steeringAngle, pedalSpeed, measurement):
     # Update the internal state (will be passed as an argument to the function
     # at next run), must obviously be compatible with the format of
     # internalStateIn:
+
     internalStateOut = internalStateIn
-    x, y, theta = internalStateIn.x, internalStateIn.y, internalStateIn.theta
+    x, y, theta = np.mean(internalStateIn.x), np.mean(internalStateIn.y), np.mean(internalStateIn.theta)
 
     # DO NOT MODIFY THE OUTPUT FORMAT:
     return x, y, theta, internalStateOut
